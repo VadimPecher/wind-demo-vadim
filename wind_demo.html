@@ -12,28 +12,43 @@
 				font-weight: bold;
 				overflow:hidden;
 			}
+            
+            .white_text {
+				color: #ffffff;
+				font-family:Monospace;
+				font-size:13px;
+				text-align:center;
+				width: 100%;
+            }
 
 			#info {
 				position: absolute;
 				top: 0px;
-				width: 100%;
-				color: #ffffff;
 				padding: 5px;
-				font-family:Monospace;
-				font-size:13px;
-				text-align:center;
+			}
+
+			#restart {
+				position: absolute;
+				top: 30%;
+				font-size:18px;
 			}
 
 			a {
-				color: #ffffff;
+				color: #cccccc;
+                font-size:16px;
+                cursor: pointer;
 			}
 		</style>
 	</head>
 	<body>
 
 		<div id="container"></div>
-		<div id="info">
+		<div id="info" class="white_text">
 			Wind demo
+		</div>
+        <div id="restart" class="white_text">
+			Be a hero. Produce green energy. <br/>
+            <a style="text-decoration: underline;" onclick="restart();return false;">Replay</a>
 		</div>
 
 		<script src="node_modules/three/build/three.js"></script>

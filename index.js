@@ -2,11 +2,15 @@ if (!Detector.webgl) Detector.addGetWebGLMessage();
 
 class Turbine { //extends?
     
-    constructor(obj, isShow) {
+    constructor(obj) {
         this.obj = obj;
-        this.obj.visible = isShow;
         var blade = this.blade = obj.children[1];
         blade.rotation.x = Math.random(Math.PI * 2);
+        //init();
+    }
+    
+    init() {
+        this.obj.visible = false;
         this.speed = 0;
     }
     
@@ -14,13 +18,13 @@ class Turbine { //extends?
         this.obj.visible = true;
         this.blade.visible = false;
         
-        //TODO: problem with the same inner obj after clone() ?!
         this.obj.scale.y = 0.01;
         createjs.Tween.get(this.obj.scale).to({y:0.6}, 1000 / quick).call(() => { 
             this.blade.visible = true;
             this.blade.position.x = 15;
             createjs.Tween.get(this.blade.position).to({x:0}, 1000 / quick, createjs.Ease.quadOut).call(() => { 
-                createjs.Tween.get(this).to({speed:2}, 5000 / (quick * quick) ).call(callback); //(Math.random() + 2) * 1.2
+                var tween = createjs.Tween.get(this).to({speed:2}, 3000 / quick );
+                if (callback) tween.call(callback); //(Math.random() + 2) * 1.2
             });
         });
     }
@@ -34,10 +38,10 @@ class Turbine { //extends?
     }*/
 }
 
-const NUM_TURBINES = 1;
-var container, stats, clock, mixer;
+const NUM_TURBINES = 3;
+var container, restartText, stats, clock, mixer;
 var camera, scene, renderer;
-var turbines = [], pointLight;
+var turbines = [], pointLight, centerI;
 
 init();
 animate();
@@ -45,16 +49,44 @@ animate();
 function moveCameraUp() {
     createjs.Tween.get(camera.position).to({
         y:camera.position.y + 50 
-    }, 2000, createjs.Ease.quadOut);
+    }, 2000, createjs.Ease.quadOut)
+    .call(() => { restartText.style.display = 'block' });
+}
+
+function appearRestTurbines() {
+    for (let i=0; i < NUM_TURBINES; i++)
+    {
+        let turbine = turbines[i];
+        if (i == centerI) continue;
+        setTimeout(() => {
+            turbine.appear(i == 0 ? () => { 
+                setTimeout(moveCameraUp, 1000); 
+            } : null, 2);
+        }, Math.abs((i - (NUM_TURBINES - 1) * 0.5) * 500));
+    }
+}
+
+function restart() {
+    startAppear();
+}
+
+function startAppear()
+{
+    for (let i=0; i < NUM_TURBINES; i++)
+    {
+        turbines[i].init();
+    }
+    camera.position.set(25, 2, 0);
+    turbines[centerI].appear(appearRestTurbines, 1);
+    restartText.style.display = 'none';
 }
 
 function init() {
 
     container = document.getElementById( 'container' );
+    restartText = document.getElementById( 'restart' );
 
     camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 2000 );
-    //camera.position.set( 10, 4, 40 );
-    camera.position.set(25, 2, 0);
 
     clock = new THREE.Clock();
 
@@ -62,10 +94,12 @@ function init() {
    
     mixer = new THREE.AnimationMixer( scene );
 
-    // BEGIN Clara.io JSON loader code
+    // Clara.io JSON loader
+    
     var objectLoader = new THREE.ObjectLoader();
-    objectLoader.load("models/wind-turbine/wind-turbine.json", function ( obj ) {  
-        for (var i=0; i < NUM_TURBINES; i++)
+    objectLoader.load("models/wind-turbine/wind-turbine.json", function ( obj ) { 
+        centerI = Math.round((NUM_TURBINES - 1) * 0.5);
+        for (var i=0; i < NUM_TURBINES; i++) 
         {
             if (i==0){
                 obj.scale.set(0.6, 0.6, 0.6);
@@ -83,23 +117,19 @@ function init() {
                 obj.add( pivot );
             }
             else{
-                obj = obj.clone();
+                obj = obj.clone(true);
             }
 
             obj.position.z = (i - (NUM_TURBINES - 1) * 0.5) * 5;
             obj.position.x = 10 -Math.abs((i - (NUM_TURBINES - 1) * 0.5) * 5);
             scene.add( obj );
             
-            var turbine = new Turbine(obj, false);
+            var turbine = new Turbine(obj);
             turbines.push( turbine );
-            setTimeout(() => {
-                turbine.appear(moveCameraUp, 1);
-            }, 100)
         }
+        startAppear();
     } );
-    // END Clara.io JSON loader code
-
-
+    
     // lights
 
     var ambientLight = new THREE.AmbientLight( 0xcccccc );
@@ -151,7 +181,7 @@ function animate() {
 
 function render() {
 
-    var timer = Date.now() * 0.0005;
+    var deltaT = clock.getDelta();
 
     //camera.position.x = Math.cos( timer ) * 10;
     //camera.position.y = 4;
@@ -162,10 +192,10 @@ function render() {
 
     for (var i=0; i < turbines.length; i++){
         var turbine = turbines[i];
-        turbine.blade.rotation.x += clock.getDelta() * turbine.speed;
+        turbine.blade.rotation.x += deltaT * turbine.speed;
     }
 
-    mixer.update( clock.getDelta() );
+    mixer.update( deltaT );
 
     camera.lookAt( scene.position );
 
