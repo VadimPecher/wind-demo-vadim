@@ -10,7 +10,7 @@ class Turbine { //extends?
     }
     
     init() {
-        this.obj.visible = false;
+        this.obj.visible = false; 
         this.speed = 0;
     }
     
@@ -28,6 +28,31 @@ class Turbine { //extends?
             });
         });
     }
+    
+    showLine() {
+        var l = 10 + this.obj.position.x;
+        var geometry = new THREE.PlaneGeometry( l, 0.2);
+        var material = new THREE.MeshBasicMaterial( {color: 0xccffcc} );
+        var plane = new THREE.Mesh( geometry, material );
+        plane.rotation.x = -Math.PI * 0.5;
+        
+        plane.position.z = this.obj.position.z;
+        plane.position.y = this.obj.position.y;
+        
+        var pin = new THREE.Group();
+        pin.add(plane);
+        plane.position.x = -l * 0.5;
+        scene.add(pin);
+        pin.position.x = this.obj.position.x;
+        
+        pin.scale.x = 0;
+        createjs.Tween.get(pin.scale).to({x:1}, 2000);
+        
+/*var geometry = new THREE.CylinderGeometry( 2, 2, 20, 32 );
+var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
+var cylinder = new THREE.Mesh( geometry, material );
+scene.add( cylinder );*/
+    }
   
     /*get blade() {
         return this.calcArea();
@@ -39,18 +64,28 @@ class Turbine { //extends?
 }
 
 const NUM_TURBINES = 3;
-var container, restartText, stats, clock, mixer;
+var container, restartText, stats, clock;
 var camera, scene, renderer;
 var turbines = [], pointLight, centerI;
 
 init();
 animate();
 
-function moveCameraUp() {
+function moveCameraUp(t = 2000) {
     createjs.Tween.get(camera.position).to({
-        y:camera.position.y + 50 
-    }, 2000, createjs.Ease.quadOut)
-    .call(() => { restartText.style.display = 'block' });
+        y:50 
+    }, t, createjs.Ease.quadOut)
+    .call(showLines);
+}
+
+function showLines() {
+    for (let i=0; i < NUM_TURBINES; i++)
+    {
+        turbines[i].showLine();
+    }
+    setTimeout(() => { 
+        restartText.style.display = 'block';
+    }, 2000);
 }
 
 function appearRestTurbines() {
@@ -79,6 +114,8 @@ function startAppear()
     camera.position.set(25, 2, 0);
     turbines[centerI].appear(appearRestTurbines, 1);
     restartText.style.display = 'none';
+    
+    //moveCameraUp(1); // test
 }
 
 function init() {
@@ -87,12 +124,8 @@ function init() {
     restartText = document.getElementById( 'restart' );
 
     camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 2000 );
-
     clock = new THREE.Clock();
-
     scene = new THREE.Scene();
-   
-    mixer = new THREE.AnimationMixer( scene );
 
     // Clara.io JSON loader
     
@@ -120,8 +153,8 @@ function init() {
                 obj = obj.clone(true);
             }
 
-            obj.position.z = (i - (NUM_TURBINES - 1) * 0.5) * 5;
-            obj.position.x = 10 -Math.abs((i - (NUM_TURBINES - 1) * 0.5) * 5);
+            obj.position.z = (i - (NUM_TURBINES - 1) * 0.5) * 5; // left to right
+            obj.position.x = 10 -Math.abs((i - (NUM_TURBINES - 1) * 0.5) * 5); // depth
             scene.add( obj );
             
             var turbine = new Turbine(obj);
@@ -183,19 +216,10 @@ function render() {
 
     var deltaT = clock.getDelta();
 
-    //camera.position.x = Math.cos( timer ) * 10;
-    //camera.position.y = 4;
-    //camera.position.z = Math.sin( timer ) * 10;
-
-    //pointLight.position.x = Math.cos( timer ) * 10;
-    //pointLight.position.z = Math.sin( timer ) * 10;
-
     for (var i=0; i < turbines.length; i++){
         var turbine = turbines[i];
         turbine.blade.rotation.x += deltaT * turbine.speed;
     }
-
-    mixer.update( deltaT );
 
     camera.lookAt( scene.position );
 
