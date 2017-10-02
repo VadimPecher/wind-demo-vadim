@@ -7,10 +7,12 @@ class Turbine { //extends?
         var blade = this.blade = obj.children[1];
         blade.rotation.x = Math.random(Math.PI * 2);
         //init();
+        this.addLine();
     }
     
     init() {
         this.obj.visible = false; 
+        this.pinPlane.visible = false;
         this.speed = 0;
     }
     
@@ -29,7 +31,7 @@ class Turbine { //extends?
         });
     }
     
-    showLine() {
+    addLine() {
         var l = 10 + this.obj.position.x;
         var geometry = new THREE.PlaneGeometry( l, 0.2);
         var material = new THREE.MeshBasicMaterial( {color: 0xccffcc} );
@@ -44,14 +46,14 @@ class Turbine { //extends?
         plane.position.x = -l * 0.5;
         scene.add(pin);
         pin.position.x = this.obj.position.x;
+        this.pinPlane = pin;
+        this.pinPlane.visible = false;
+    }
         
-        pin.scale.x = 0;
-        createjs.Tween.get(pin.scale).to({x:1}, 2000);
-        
-/*var geometry = new THREE.CylinderGeometry( 2, 2, 20, 32 );
-var material = new THREE.MeshBasicMaterial( {color: 0xffff00} );
-var cylinder = new THREE.Mesh( geometry, material );
-scene.add( cylinder );*/
+    showLine() {
+        this.pinPlane.visible = true;
+        this.pinPlane.scale.x = 0;
+        createjs.Tween.get(this.pinPlane.scale).to({x:1}, 2000);
     }
   
     /*get blade() {
