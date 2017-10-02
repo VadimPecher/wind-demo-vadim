@@ -63,7 +63,7 @@ scene.add( cylinder );*/
     }*/
 }
 
-const NUM_TURBINES = 3;
+const NUM_TURBINES = 7;
 var container, restartText, stats, clock;
 var camera, scene, renderer;
 var turbines = [], pointLight, centerI;
