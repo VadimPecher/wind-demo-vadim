@@ -3,6 +3,7 @@ if (!Detector.webgl) Detector.addGetWebGLMessage();
 class Turbine {
     
     constructor(obj) {
+        
         this.destX = 10;
         this.obj = obj;
         var blade = this.blade = obj.children[1];
@@ -12,6 +13,7 @@ class Turbine {
     }
     
     init() {
+        
         this.obj.visible = false; 
         this.pinPlane.visible = false;
         this.particleSystem.visible = false;
@@ -20,7 +22,8 @@ class Turbine {
         this.particleOptions.position = this.obj.position.clone();
     }
     
-    appear(callback, quick = 1){
+    appear(callback, quick = 1) {
+        
         this.obj.visible = true;
         this.blade.visible = false;
         
@@ -29,17 +32,18 @@ class Turbine {
             this.blade.visible = true;
             this.blade.position.x = 15;
             createjs.Tween.get(this.blade.position).to({x:0}, 1000 / quick, createjs.Ease.quadOut).call(() => { 
-                var tween = createjs.Tween.get(this).to({speed:2}, 3000 / quick );
+                var tween = createjs.Tween.get(this).to({speed:2}, 3000 / quick);
                 if (callback) tween.call(callback);
             });
         });
     }
     
     addLine() {
+        
         var l = this.destX + this.obj.position.x;
-        var geometry = new THREE.PlaneGeometry( l, 0.2);
-        var material = new THREE.MeshBasicMaterial( {color: 0xccffcc} );
-        var plane = new THREE.Mesh( geometry, material );
+        var geometry = new THREE.PlaneGeometry(l, 0.2);
+        var material = new THREE.MeshBasicMaterial({color: 0xccffcc});
+        var plane = new THREE.Mesh(geometry, material);
         plane.rotation.x = -Math.PI * 0.5;
         
         plane.position.z = this.obj.position.z;
@@ -55,6 +59,7 @@ class Turbine {
     }
         
     showLine() {
+        
         this.pinPlane.visible = true;
         this.pinPlane.scale.x = 0;
         createjs.Tween.get(this.pinPlane.scale).to({x:1}, 2000).call(() => { 
@@ -64,10 +69,11 @@ class Turbine {
     }
     
     addParticles() {
-        this.particleSystem = new THREE.GPUParticleSystem( {
+        
+        this.particleSystem = new THREE.GPUParticleSystem({
             maxParticles: 1000 // radically affects CPU load
-        } );
-        scene.add( this.particleSystem );
+        });
+        scene.add(this.particleSystem);
 
         this.particleOptions = {
             position: new THREE.Vector3(),
@@ -84,6 +90,7 @@ class Turbine {
     }
     
     render(deltaT) {
+        
         this.blade.rotation.x += deltaT * this.speed;
     
         if (this.particleSystem && this.timeScale > 0.01)
@@ -92,10 +99,10 @@ class Turbine {
             if (this.particleOptions.position.x < -this.destX) this.particleOptions.position.x = this.obj.position.x;
             
             var particlesNum = Math.abs(4000 * deltaT * this.timeScale);
-            for (var i = 0; i < particlesNum; i++ ) {
-                this.particleSystem.spawnParticle( this.particleOptions );
+            for (var i = 0; i < particlesNum; i++) {
+                this.particleSystem.spawnParticle(this.particleOptions);
             }
-            this.particleSystem.update( tick );
+            this.particleSystem.update(tick);
         }
     }
 }
@@ -109,6 +116,7 @@ init();
 animate();
 
 function moveCameraUp(t = 2000) {
+    
     createjs.Tween.get(camera.position).to({
         y:50 
     }, t, createjs.Ease.quadOut)
@@ -116,6 +124,7 @@ function moveCameraUp(t = 2000) {
 }
 
 function showLines() {
+    
     for (let i=0; i < NUM_TURBINES; i++)
     {
         turbines[i].showLine();
@@ -126,6 +135,7 @@ function showLines() {
 }
 
 function appearRestTurbines() {
+    
     for (let i=0; i < NUM_TURBINES; i++)
     {
         let turbine = turbines[i];
@@ -139,11 +149,12 @@ function appearRestTurbines() {
 }
 
 function restart() {
+    
     startAppear();
 }
 
-function startAppear()
-{
+function startAppear() {
+    
     for (let i=0; i < NUM_TURBINES; i++)
     {
         turbines[i].init();
@@ -157,21 +168,21 @@ function startAppear()
 
 function init() {
 
-    container = document.getElementById( 'container' );
-    restartText = document.getElementById( 'restart' );
+    container = document.getElementById('container');
+    restartText = document.getElementById('restart');
 
-    camera = new THREE.PerspectiveCamera( 50, window.innerWidth / window.innerHeight, 1, 2000 );
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 2000);
     clock = new THREE.Clock();
     scene = new THREE.Scene();
 
     // Clara.io JSON loader
     
     var objectLoader = new THREE.ObjectLoader();
-    objectLoader.load("models/wind-turbine/wind-turbine.json", function ( obj ) { 
+    objectLoader.load("models/wind-turbine/wind-turbine.json", function (obj) { 
         centerI = Math.round((NUM_TURBINES - 1) * 0.5);
         for (var i=0; i < NUM_TURBINES; i++) 
         {
-            if (i==0){
+            if (i==0) {
                 obj.scale.set(0.6, 0.6, 0.6);
                 obj.position.y = -4;
 
@@ -183,8 +194,8 @@ function init() {
                 var pivot = new THREE.Group();
                 mesh.position.y = dy;
                 pivot.position.y = -dy;
-                pivot.add( mesh );
-                obj.add( pivot );
+                pivot.add(mesh);
+                obj.add(pivot);
             }
             else{
                 obj = obj.clone(true);
@@ -192,61 +203,54 @@ function init() {
 
             obj.position.z = (i - (NUM_TURBINES - 1) * 0.5) * 5; // left to right
             obj.position.x = 10 -Math.abs((i - (NUM_TURBINES - 1) * 0.5) * 5); // depth
-            scene.add( obj );
+            scene.add(obj);
             
             var turbine = new Turbine(obj);
-            turbines.push( turbine );
+            turbines.push(turbine);
         }
         startAppear();
-    } );
+    });
     
     // lights
 
-    var ambientLight = new THREE.AmbientLight( 0xcccccc );
-    scene.add( ambientLight );
+    var ambientLight = new THREE.AmbientLight(0xcccccc);
+    scene.add(ambientLight);
 
-    pointLight = new THREE.PointLight( 0xffffff, 5, 30 );
-    pointLight.position.set( 5, 8, 0 );
-    scene.add( pointLight );
+    pointLight = new THREE.PointLight(0xffffff, 5, 30);
+    pointLight.position.set(5, 8, 0);
+    scene.add(pointLight);
 
     // renderer
 
     renderer = new THREE.WebGLRenderer();
-    renderer.setPixelRatio( window.devicePixelRatio );
-    renderer.setSize( window.innerWidth, window.innerHeight );
-    container.appendChild( renderer.domElement );
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
 
     // stats
 
     stats = new Stats();
-    container.appendChild( stats.dom );
+    container.appendChild(stats.dom);
 
     // events
 
-    window.addEventListener( 'resize', onWindowResize, false );
-
+    window.addEventListener('resize', onWindowResize, false);
 }
 
-//
+function onWindowResize(event) {
 
-function onWindowResize( event ) {
-
-    renderer.setSize( window.innerWidth, window.innerHeight );
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
     camera.aspect = window.innerWidth / window.innerHeight;
     camera.updateProjectionMatrix();
-
 }
-
-//
 
 function animate() {
 
-    requestAnimationFrame( animate );
+    requestAnimationFrame(animate);
 
     render();
     stats.update();
-
 }
 
 function render() {
@@ -254,12 +258,11 @@ function render() {
     var deltaT = clock.getDelta();
     tick += deltaT;
 
-    for (var i=0; i < turbines.length; i++){
+    for (var i=0; i < turbines.length; i++) {
         turbines[i].render(deltaT);
     }
 
-    camera.lookAt( scene.position );
+    camera.lookAt(scene.position);
 
-    renderer.render( scene, camera );
-
+    renderer.render(scene, camera);
 }
