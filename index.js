@@ -1,12 +1,12 @@
 if (!Detector.webgl) Detector.addGetWebGLMessage();
 
-class Turbine { //extends?
+class Turbine {
     
     constructor(obj) {
+        this.destX = 10;
         this.obj = obj;
         var blade = this.blade = obj.children[1];
         blade.rotation.x = Math.random(Math.PI * 2);
-        //init();
         this.addLine();
         this.addParticles();
     }
@@ -17,7 +17,7 @@ class Turbine { //extends?
         this.particleSystem.visible = false;
         this.speed = 0;
         this.timeScale = 0;
-        this.options.position = this.obj.position.clone();
+        this.particleOptions.position = this.obj.position.clone();
     }
     
     appear(callback, quick = 1){
@@ -30,13 +30,13 @@ class Turbine { //extends?
             this.blade.position.x = 15;
             createjs.Tween.get(this.blade.position).to({x:0}, 1000 / quick, createjs.Ease.quadOut).call(() => { 
                 var tween = createjs.Tween.get(this).to({speed:2}, 3000 / quick );
-                if (callback) tween.call(callback); //(Math.random() + 2) * 1.2
+                if (callback) tween.call(callback);
             });
         });
     }
     
     addLine() {
-        var l = 10 + this.obj.position.x;
+        var l = this.destX + this.obj.position.x;
         var geometry = new THREE.PlaneGeometry( l, 0.2);
         var material = new THREE.MeshBasicMaterial( {color: 0xccffcc} );
         var plane = new THREE.Mesh( geometry, material );
@@ -69,7 +69,7 @@ class Turbine { //extends?
         } );
         scene.add( this.particleSystem );
 
-        this.options = {
+        this.particleOptions = {
             position: new THREE.Vector3(),
             positionRandomness: .13,
             velocity: new THREE.Vector3(),
@@ -88,13 +88,12 @@ class Turbine { //extends?
     
         if (this.particleSystem && this.timeScale > 0.01)
         {
-            this.options.position.x -= deltaT * 10;
-            if (this.options.position.x < -10) this.options.position.x = this.obj.position.x;
+            this.particleOptions.position.x -= deltaT * 10;
+            if (this.particleOptions.position.x < -this.destX) this.particleOptions.position.x = this.obj.position.x;
             
             var particlesNum = Math.abs(4000 * deltaT * this.timeScale);
-            //window.console.log("particlesNum:", particlesNum);
-            for ( var x = 0; x < particlesNum; x++ ) {
-                this.particleSystem.spawnParticle( this.options );
+            for (var i = 0; i < particlesNum; i++ ) {
+                this.particleSystem.spawnParticle( this.particleOptions );
             }
             this.particleSystem.update( tick );
         }
@@ -176,7 +175,7 @@ function init() {
                 obj.scale.set(0.6, 0.6, 0.6);
                 obj.position.y = -4;
 
-                obj.remove(obj.children[0], obj.children[1], obj.children[2]); // unneseccary
+                obj.remove(obj.children[0], obj.children[1], obj.children[2]); // unnecessary objects from the model
 
                 // changing pivot point
                 var dy = -7.75;
@@ -256,8 +255,7 @@ function render() {
     tick += deltaT;
 
     for (var i=0; i < turbines.length; i++){
-        var turbine = turbines[i];
-        turbine.render(deltaT);
+        turbines[i].render(deltaT);
     }
 
     camera.lookAt( scene.position );
