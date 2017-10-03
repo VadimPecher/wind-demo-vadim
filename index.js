@@ -8,12 +8,16 @@ class Turbine { //extends?
         blade.rotation.x = Math.random(Math.PI * 2);
         //init();
         this.addLine();
+        this.addParticles();
     }
     
     init() {
         this.obj.visible = false; 
         this.pinPlane.visible = false;
+        this.particleSystem.visible = false;
         this.speed = 0;
+        this.timeScale = 0;
+        this.options.position = this.obj.position.clone();
     }
     
     appear(callback, quick = 1){
@@ -53,23 +57,54 @@ class Turbine { //extends?
     showLine() {
         this.pinPlane.visible = true;
         this.pinPlane.scale.x = 0;
-        createjs.Tween.get(this.pinPlane.scale).to({x:1}, 2000);
+        createjs.Tween.get(this.pinPlane.scale).to({x:1}, 2000).call(() => { 
+            this.particleSystem.visible = true;
+            this.timeScale = 0.3; 
+        });
     }
-  
-    /*get blade() {
-        return this.calcArea();
-    }
+    
+    addParticles() {
+        this.particleSystem = new THREE.GPUParticleSystem( {
+            maxParticles: 1000 // radically affects CPU load
+        } );
+        scene.add( this.particleSystem );
 
-    calcArea() {
-        return this.height * this.width;
-    }*/
+        this.options = {
+            position: new THREE.Vector3(),
+            positionRandomness: .13,
+            velocity: new THREE.Vector3(),
+            velocityRandomness: 1.3,
+            color: 0xccffcc,
+            colorRandomness: 0.2,
+            turbulence: 0,//0.5,
+            lifetime: 1.0,
+            size: 4.0,
+            sizeRandomness: 10.0
+        };   
+    }
+    
+    render(deltaT) {
+        this.blade.rotation.x += deltaT * this.speed;
+    
+        if (this.particleSystem && this.timeScale > 0.01)
+        {
+            this.options.position.x -= deltaT * 10;
+            if (this.options.position.x < -10) this.options.position.x = this.obj.position.x;
+            
+            var particlesNum = Math.abs(4000 * deltaT * this.timeScale);
+            //window.console.log("particlesNum:", particlesNum);
+            for ( var x = 0; x < particlesNum; x++ ) {
+                this.particleSystem.spawnParticle( this.options );
+            }
+            this.particleSystem.update( tick );
+        }
+    }
 }
 
-const NUM_TURBINES = 3;
+const NUM_TURBINES = 7;
 var container, restartText, stats, clock, tick = 0;
 var camera, scene, renderer;
 var turbines = [], pointLight, centerI;
-var options, particleSystem;
 
 init();
 animate();
@@ -166,35 +201,6 @@ function init() {
         startAppear();
     } );
     
-    // particles
-    
-    particleSystem = new THREE.GPUParticleSystem( {
-        maxParticles: 250000
-    } );
-    scene.add( particleSystem );
-    
-    // options passed during each spawned particle
-    
-    options = {
-        position: new THREE.Vector3(),
-        positionRandomness: .3,
-        velocity: new THREE.Vector3(),
-        velocityRandomness: .5,
-        color: 0xaa88ff,
-        colorRandomness: .2,
-        turbulence: .5,
-        lifetime: 2,
-        size: 5,
-        sizeRandomness: 1
-    };
-
-    spawnerOptions = {
-        spawnRate: 15000,
-        horizontalSpeed: 1.5,
-        verticalSpeed: 1.33,
-        timeScale: 1
-    };
-    
     // lights
 
     var ambientLight = new THREE.AmbientLight( 0xcccccc );
@@ -251,17 +257,10 @@ function render() {
 
     for (var i=0; i < turbines.length; i++){
         var turbine = turbines[i];
-        turbine.blade.rotation.x += deltaT * turbine.speed;
+        turbine.render(deltaT);
     }
 
     camera.lookAt( scene.position );
-    
-    var particlesNum = 1000 * deltaT;
-    //window.console.log("particlesNum:", particlesNum);
-    for ( var x = 0; x < particlesNum; x++ ) {
-        particleSystem.spawnParticle( options );
-    }
-    particleSystem.update( tick );
 
     renderer.render( scene, camera );
 
