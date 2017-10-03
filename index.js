@@ -65,10 +65,11 @@ class Turbine { //extends?
     }*/
 }
 
-const NUM_TURBINES = 7;
-var container, restartText, stats, clock;
+const NUM_TURBINES = 3;
+var container, restartText, stats, clock, tick = 0;
 var camera, scene, renderer;
 var turbines = [], pointLight, centerI;
+var options, particleSystem;
 
 init();
 animate();
@@ -165,6 +166,35 @@ function init() {
         startAppear();
     } );
     
+    // particles
+    
+    particleSystem = new THREE.GPUParticleSystem( {
+        maxParticles: 250000
+    } );
+    scene.add( particleSystem );
+    
+    // options passed during each spawned particle
+    
+    options = {
+        position: new THREE.Vector3(),
+        positionRandomness: .3,
+        velocity: new THREE.Vector3(),
+        velocityRandomness: .5,
+        color: 0xaa88ff,
+        colorRandomness: .2,
+        turbulence: .5,
+        lifetime: 2,
+        size: 5,
+        sizeRandomness: 1
+    };
+
+    spawnerOptions = {
+        spawnRate: 15000,
+        horizontalSpeed: 1.5,
+        verticalSpeed: 1.33,
+        timeScale: 1
+    };
+    
     // lights
 
     var ambientLight = new THREE.AmbientLight( 0xcccccc );
@@ -217,6 +247,7 @@ function animate() {
 function render() {
 
     var deltaT = clock.getDelta();
+    tick += deltaT;
 
     for (var i=0; i < turbines.length; i++){
         var turbine = turbines[i];
@@ -224,6 +255,13 @@ function render() {
     }
 
     camera.lookAt( scene.position );
+    
+    var particlesNum = 1000 * deltaT;
+    //window.console.log("particlesNum:", particlesNum);
+    for ( var x = 0; x < particlesNum; x++ ) {
+        particleSystem.spawnParticle( options );
+    }
+    particleSystem.update( tick );
 
     renderer.render( scene, camera );
 
